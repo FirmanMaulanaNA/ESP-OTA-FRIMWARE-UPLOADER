@@ -4,6 +4,6 @@
   "version": "1.0.0",
   "description": "Universal Firmware Installer for ESP32 Devices",
   "manifest_version": 1,
-  "firmware_url": "ESP32-OTA-FRIMWARE-UPLOADER",
+  "firmware_url": "ESP32-OTA-FRIMWARE-UPLOADER.bin",
   "chip": "ESP32"
 }
