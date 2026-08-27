@@ -7,7 +7,10 @@
     <title>ESP32 OTA Universal - Firmware Installer</title>
     <meta name="description" content="Universal Firmware Installer for ESP32 Devices">
     <link rel="manifest" href="manifest.json">
+    
+    <!-- ESP Web Tools v10 -->
     <script type="module" src="https://unpkg.com/esp-web-tools@10/dist/web/install-button.js?module"></script>
+
     <style>
         :root {
             --bg-color: #050505;
@@ -22,11 +25,7 @@
             --border-radius: 16px;
         }
 
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
+        * { margin: 0; padding: 0; box-sizing: border-box; }
 
         body {
             background-color: var(--bg-color);
@@ -54,12 +53,6 @@
             100% { transform: translateY(0px); }
         }
 
-        @keyframes glow {
-            0% { box-shadow: 0 0 5px var(--neon-blue); }
-            50% { box-shadow: 0 0 20px var(--neon-cyan); }
-            100% { box-shadow: 0 0 5px var(--neon-blue); }
-        }
-
         .container {
             max-width: 1200px;
             margin: 0 auto;
@@ -75,10 +68,7 @@
             animation: fadeIn 0.8s ease-out;
         }
 
-        .logo-container {
-            margin-bottom: 20px;
-            display: inline-block;
-        }
+        .logo-container { margin-bottom: 20px; display: inline-block; }
 
         .esp-icon {
             width: 80px;
@@ -136,20 +126,6 @@
             width: 100%;
             height: 2px;
             background: linear-gradient(90deg, transparent, var(--neon-cyan), transparent);
-        }
-
-        .status-badge {
-            display: inline-block;
-            padding: 6px 16px;
-            background: rgba(0, 243, 255, 0.1);
-            border: 1px solid rgba(0, 243, 255, 0.3);
-            color: var(--neon-cyan);
-            border-radius: 20px;
-            font-size: 0.85rem;
-            font-weight: 600;
-            margin-bottom: 20px;
-            text-transform: uppercase;
-            letter-spacing: 1px;
         }
 
         .steps {
@@ -234,16 +210,8 @@
             box-shadow: 0 10px 30px rgba(0, 68, 255, 0.2);
         }
 
-        .card h3 {
-            color: var(--neon-cyan);
-            margin-bottom: 10px;
-            font-size: 1.2rem;
-        }
-
-        .card p {
-            color: var(--text-muted);
-            font-size: 0.95rem;
-        }
+        .card h3 { color: var(--neon-cyan); margin-bottom: 10px; font-size: 1.2rem; }
+        .card p { color: var(--text-muted); font-size: 0.95rem; }
 
         /* Info Card */
         .info-grid {
@@ -272,11 +240,7 @@
             margin-bottom: 5px;
         }
 
-        .info-value {
-            color: var(--text-main);
-            font-size: 1.1rem;
-            font-weight: 500;
-        }
+        .info-value { color: var(--text-main); font-size: 1.1rem; font-weight: 500; }
 
         /* Compatibility */
         .compat-list {
@@ -314,9 +278,7 @@
             animation: fadeIn 1s ease-out 1s backwards;
         }
 
-        footer p {
-            margin: 5px 0;
-        }
+        footer p { margin: 5px 0; }
 
         /* Responsive */
         @media (max-width: 768px) {
@@ -324,6 +286,11 @@
             .installer-card { padding: 25px; }
             .grid { grid-template-columns: 1fr; }
             .info-grid { grid-template-columns: 1fr; }
+        }
+        
+        /* Error Handling for ESP Web Tools */
+        esp-web-install-button:not(.installed) {
+            display: block;
         }
     </style>
 </head>
@@ -340,9 +307,7 @@
 
         <main>
             <section class="installer-card">
-                <div class="status-badge">
-                    <span id="status">Ready to Install</span>
-                </div>
+                <div class="status-badge" id="status-badge" style="display: none;"></div>
 
                 <div class="steps">
                     <p>Hubungkan ESP32 melalui USB</p>
@@ -351,11 +316,21 @@
                     <p>Tunggu hingga proses selesai</p>
                 </div>
 
-                <esp-web-install-button manifest="manifest.json"></esp-web-install-button>
+                <esp-web-install-button id="installer" manifest="manifest.json"></esp-web-install-button>
 
                 <script type="module">
-                    const button = document.querySelector('esp-web-install-button');
-                    const status = document.getElementById('status');
+                    const button = document.getElementById('installer');
+                    const statusBadge = document.getElementById('status-badge');
+
+                    // Fallback jika ESP Web Tools gagal load atau browser tidak support
+                    window.addEventListener('load', () => {
+                        setTimeout(() => {
+                            if (!button.installed && !document.querySelector('esp-web-install-button[dialog]')) {
+                                // Optional: Show fallback message if needed
+                                console.log('ESP Web Tools: Waiting for user interaction or connection');
+                            }
+                        }, 2000);
+                    });
 
                     button.addEventListener('slotchange', (e) => {
                         const slot = e.target.shadowRoot.querySelector('slot');
@@ -368,13 +343,22 @@
 
                     button.addEventListener('connection-state-changed', (e) => {
                         if (e.detail.connected) {
-                            status.textContent = "Connected";
-                            status.style.color = "#00ff00";
-                            status.style.borderColor = "#00ff00";
+                            statusBadge.textContent = "Connected";
+                            statusBadge.style.color = "#00ff00";
+                            statusBadge.style.borderColor = "#00ff00";
+                            statusBadge.style.display = "inline-block";
                         } else {
-                            status.textContent = "Ready to Install";
-                            status.style.color = "";
-                            status.style.borderColor = "";
+                            statusBadge.style.display = "none";
+                        }
+                    });
+                    
+                    // Catch errors from the dialog
+                    button.addEventListener('status', (e) => {
+                        if (e.detail === 'error') {
+                            statusBadge.textContent = "Error: Check USB Connection";
+                            statusBadge.style.color = "#ff4d4d";
+                            statusBadge.style.borderColor = "#ff4d4d";
+                            statusBadge.style.display = "inline-block";
                         }
                     });
                 </script>
@@ -453,5 +437,4 @@
 
 </body>
 </html>
-
 
