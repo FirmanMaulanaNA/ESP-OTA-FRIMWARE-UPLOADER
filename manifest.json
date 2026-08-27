@@ -7,7 +7,7 @@
       "parts": [
         {
           "path": "ESP32-OTA-FRIMWARE-UPLOADER.bin",
-          "offset": 0
+          "offset": 65536
         }
       ]
     }
