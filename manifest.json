@@ -1,0 +1,9 @@
+
+{
+  "name": "ESP32 OTA Universal",
+  "version": "1.0.0",
+  "description": "Universal Firmware Installer for ESP32 Devices",
+  "manifest_version": 1,
+  "firmware_url": "ESP32-OTA-FRIMWARE-UPLOADER",
+  "chip": "ESP32"
+}
